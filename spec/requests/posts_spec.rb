@@ -48,22 +48,50 @@ RSpec.describe "Posts", type: :request do
       expect(posts.count).to eq(5)
     end
   end
-  # describe "get /posts/:id" do
-  #   it "should return a specific post" do
-  #     user = User.create(name: "Marshall Mathers", email: "m&m@gmail.com", password: "password")
+  describe "get /posts/:id" do
+    it "should return a specific post" do
+      user = User.create!(name: "Marshall Mathers", email: "m&m@gmail.com", password: "password")
 
-  #     post = Post.create!(
-  #       title: "How to be a rapper",
-  #       body: "rhymes and swag",
-  #       image: "rap.com",
-  #       user_id: user.id
-  #     )
+      post = Post.create!(
+        title: "How to be a rapper",
+        body: "rhymes and swag",
+        image: "rap.com",
+        user_id: user.id
+      )
 
-  #     get "api/posts/#{post.id}"
-  #     post = JSON.parse(response.body)
+      get "/api/posts/#{post.id}"
+      post = JSON.parse(response.body)
 
-  #     expect(response).to have_http_status(200)
-  #     expect(post['title']).to eq("How to be a rapper")
-  #   end
-  # end
+      expect(response).to have_http_status(200)
+      expect(post['title']).to eq("How to be a rapper")
+    end
+  end
+
+  describe "POST /posts" do
+    it "should create a new post" do
+      user = User.create!(email: "bob@bob.com", password: "password", name: "bob knight")
+
+      jwt = JWT.encode(
+        {
+          user: user.id,
+          exp: 24.hours.from_now.to_i
+        },
+        "random", # the secret key
+        'HS256' # the encryption algorithm
+      )
+
+      post "/api/posts", params: {
+        title: "Chillin",
+        body: "Chillin and hanging",
+        image: "lemonchill.com",
+      }, headers: {
+        "Authorization" => "Bearer #{jwt}"
+      }
+
+      post = JSON.parse(response.body)
+
+      expect(response).to have_http_status(200)
+      expect(post["title"]).to eq('Chillin')
+    end
+  end
 end
