@@ -93,5 +93,24 @@ RSpec.describe "Posts", type: :request do
       expect(response).to have_http_status(200)
       expect(post["title"]).to eq('Chillin')
     end
+    it "should return errors when user does not pass validations" do
+      user = User.create!(email: "roger@bob.com", password: "password", name: "roger stlering")
+
+      jwt = JWT.encode(
+        {
+          user: user.id,
+          exp: 24.hours.from_now.to_i
+        },
+        "random", # the secret key
+        'HS256' # the encryption algorithm
+      )
+      
+      post "/api/posts", headers: {
+        "Authorization" => "Bearer #{jwt}"
+      }
+      errors = JSON.parse(response.body)
+
+      p errors
+    end
   end
 end
